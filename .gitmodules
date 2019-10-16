@@ -1,0 +1,3 @@
+[submodule "CompilerTools/TrieNAhoCorasick"]
+	path = CompilerTools/TrieNAhoCorasick
+	url = https://github.com/ChisBread/TrieNAhoCorasick
