@@ -50,7 +50,6 @@ void LexAnalyzer::init(){
 }
 
 void LexAnalyzer::preAnalyze(){
-    cerr << code_length << endl;
     bool is_single_line_comment = false;
     bool is_multiline_comment = false;
     bool is_string = false;
