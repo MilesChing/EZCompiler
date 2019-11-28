@@ -1,5 +1,4 @@
-#ifndef _STRING_CONVERTER_
-#define _STRING_CONVERTER_
+#pragma once
 
 #include <sstream>
 
@@ -21,5 +20,3 @@ public:
 };
 
 }
-
-#endif

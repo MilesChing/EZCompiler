@@ -1,6 +1,4 @@
-#ifndef _FILE_LEX_ANALYZER_
-#define _FILE_LEX_ANALYZER_
-
+#pragma once
 #include <cstring>
 #include <vector>
 #include "lex_component.h"
@@ -41,5 +39,3 @@ class LexAnalyzer{
 };
 
 }
-
-#endif

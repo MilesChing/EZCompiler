@@ -1,5 +1,4 @@
-#ifndef SETCOLOR_H
-#define SETCOLOR_H
+#pragma once
 
 const int F_BLACK = 0x01;	// 000001
 const int F_RED = 0x02l;		// 000010
@@ -19,5 +18,3 @@ const int B_WHITE = 0x90;	// 110000
 bool setColor(int color);
 void resetFColor();
 void resetBColor();
-
-#endif

@@ -4,32 +4,54 @@ using namespace std;
 
 namespace EZCompiler{
 
-SyntaxAnalyzerKernel::SyntaxAnalyzerKernel(const vector<vector<SyntaxAnalyzerKernel*>>& patt, SyntaxComponent comp) : patterns(patt), component(comp){
+static inline void thr(const string& message){
+    cerr << message << endl;
+    throw message;
+}
+
+SyntaxKernel::SyntaxKernel(const string& syn) : syn_id(syn){}
+
+string SyntaxKernel::ToString() const{
+    return syn_id;
+}
+
+ComponentKernel::ComponentKernel(const string& id, bool n)
+    : SyntaxKernel(id), nullable(n){}
+
+void ComponentKernel::SetPatterns(const vector<vector<SyntaxKernel*>>& patt){
+    patterns = patt;
+    if(patt.empty()) thr("Patterns must not be empty.");
+}
+
+vector<SyntaxKernel*> ComponentKernel::GetStep(LexComponent lex_component) const{
+    auto target = FIRST.find(lex_component);
+    if(target == FIRST.end())
+        if(!nullable) thr("Parsing error occurs.");
+        else return vector<SyntaxKernel*>();
+    else return patterns[target->second];
+}
+
+vector<LexComponent> ComponentKernel::GetFirst() {
     for(int i = 0; i < patterns.size(); ++i){
         if(patterns[i].empty()) continue;
-        for(auto& p : patterns[i][0]->FIRST){
-            if(FIRST.find(p.first) != FIRST.end()){
-                cerr << "Syntax input not LL(1)" << endl;
-                throw -1;
-            }
-            else FIRST.insert(make_pair(p.first, i));
+        for(auto& p : patterns[i][0]->GetFirst()){
+            if(FIRST.find(p) != FIRST.end())
+                thr("Syntax input not LL(1)");
+            else FIRST.insert(make_pair(p, i));
         }
     }
 }
 
-vector<SyntaxAnalyzerKernel*> SyntaxAnalyzerKernel::GetStep(LexComponent lex_component) const{
-    auto target = FIRST.find(lex_component);
-    if(target == FIRST.end())
-        return vector<SyntaxAnalyzerKernel*>();
-    return patterns[target->second];
+TerminatorKernel::TerminatorKernel(LexComponent lex_cmp, const string& id) : comp(lex_cmp),
+    SyntaxKernel(id){}
+
+vector<SyntaxKernel*> TerminatorKernel::GetStep(LexComponent lex_component) const{
+    if(lex_component == comp) return vector<SyntaxKernel*>();
+    else thr("Parsing error occurs.");
 }
 
-bool SyntaxAnalyzerKernel::TermSymbol() const{
-    return patterns.empty();
-}
-
-SyntaxComponent SyntaxAnalyzerKernel::Component() const{
-    return component;
+vector<LexComponent> TerminatorKernel::GetFirst(){
+    return vector<LexComponent>(1, comp);
 }
 
 SyntaxAnalyzer::~SyntaxAnalyzer(){
@@ -39,27 +61,24 @@ SyntaxAnalyzer::~SyntaxAnalyzer(){
 void SyntaxAnalyzer::Clear(){
     pattern.clear();
     pattern.push_back(root);
+    cptr = 0;
 }
 
-vector<SyntaxComponent> SyntaxAnalyzer::GetStep(LexComponent lex_component){
-    for(int i = 0; i < pattern.size(); ++i){
-        if(pattern[i]->TermSymbol()) continue;
-        vector<SyntaxAnalyzerKernel*> inner_pattern = pattern[i]->GetStep(lex_component);
-        if(inner_pattern.empty()){
-            pattern.clear();
-            break;
-        }
-        inner_pattern.insert(inner_pattern.begin(),
-            pattern.begin(), pattern.begin() + i);
-        inner_pattern.insert(inner_pattern.end(),
-            pattern.begin() + i + 1, pattern.end());
-        swap(inner_pattern, pattern);
-        break;
+vector<string> SyntaxAnalyzer::GetStep(LexComponent lex_component){
+    if(lex_component == LexComponentNull) pattern.clear();
+    if(cptr >= pattern.size()) pattern.clear();
+    else{
+        vector<SyntaxKernel*> partial_pattern =
+            pattern[cptr]->GetStep(lex_component);
+        partial_pattern.insert(partial_pattern.begin(),
+            pattern.begin(), pattern.begin() + cptr);
+        partial_pattern.insert(partial_pattern.end(),
+            pattern.begin() + cptr + 1, pattern.end());
+        swap(partial_pattern, pattern);
     }
 
-    vector<SyntaxComponent> result(pattern.size());
-    for(int i = 0; i < pattern.size(); ++i)
-        result[i] = pattern[i]->Component();
+    vector<string> result(pattern.size());
+    for(int i = 0; i < pattern.size(); ++i) result[i] = pattern[i]->ToString();
     return result;
 }
 

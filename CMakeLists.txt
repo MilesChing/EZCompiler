@@ -13,5 +13,7 @@ endif()
 
 include_directories(CompilerTools)
 include_directories(LexAnalyzer)
+include_directories(SyntaxAnalyzer)
 add_subdirectory(LexAnalyzer)
 add_subdirectory(CompilerTools)
+add_subdirectory(SyntaxAnalyzer)

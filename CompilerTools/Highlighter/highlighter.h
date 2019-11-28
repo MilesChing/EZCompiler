@@ -1,5 +1,4 @@
-#ifndef _HIGHLIGHTER_
-#define _HIGHLIGHTER_
+#pragma once
 
 #include "lex_component.h"
 #include "lex_analyzer.h"
@@ -27,5 +26,3 @@ private:
 };
 
 }
-
-#endif

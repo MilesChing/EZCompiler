@@ -1,5 +1,4 @@
-#ifndef _FILE_LEX_COMPONENT_
-#define _FILE_LEX_COMPONENT_
+#pragma once
 
 #include <string>
 using namespace std;
@@ -111,5 +110,3 @@ bool is_value(LexComponent component);
 string to_string(LexComponent component);
 
 }
-
-#endif
