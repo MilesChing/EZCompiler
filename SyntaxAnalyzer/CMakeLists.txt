@@ -1,0 +1,1 @@
+add_library(syntax_analyzer syntax_analyzer.cpp)
