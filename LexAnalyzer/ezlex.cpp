@@ -2,20 +2,27 @@
 #include <fstream>
 #include <cstring>
 #include <string>
+#include <sstream>
 #include "lex_analyzer.h"
 #include "Highlighter/highlighter.h"
 using namespace std;
 using namespace EZCompiler;
 
-char* buffer = NULL;
+string src;
 bool show_highlights = false;
-bool output_details = false;
+fstream output_file;
 LexAnalyzer analyzer;
 
 void usage(){
 	cout << "ezlex -x [file_path]: Analyze the file." << endl;
 	cout << "ezlex -h -x [file_path]: Analyze the file and show highlights." << endl;
-	cout << "ezlex -o -x [file_path]: Analyze the file and output details." << endl;
+	cout << "ezlex -o [output_path] -x [file_path]: Analyze the file and output to file." << endl;
+}
+
+string read(fstream& f){
+    stringstream ssr;
+    ssr << f.rdbuf();
+    return ssr.str();
 }
 
 void solve_params(int argc, char** argv){
@@ -23,56 +30,60 @@ void solve_params(int argc, char** argv){
 		usage();
 		exit(0);
 	}
+
+	int readx = 0, reado = 0;
+
 	for(int i = 1; i < argc; ++i){
-		if(!strcmp(argv[i], "-x")){
-			if(i+1 < argc){
-				fstream f(argv[i+1]);
-				cout << "Open file: " << argv[i+1] << endl;
-				if(!f.is_open()){
-					cout << "File not exist." << endl;
-					exit(0);
-				}
-				f.seekg(0,std::ios::end);
-				int len = f.tellg();
-				f.seekg(0,std::ios::beg);
-				buffer = new char[len + 1];
-				memset(buffer, 0, len+1);
-				f.read(buffer, len);
-				return;
-			}
-			else{
-				usage();
-				exit(0);
-			}
+		if(readx == 1){
+			fstream f(argv[i], ios::in);
+			src = read(f);
+			readx = 2;
+		}
+		else if(reado == 1){
+			output_file = fstream(argv[i], ios::out);
+			reado = 2;
+		}
+		else if(!strcmp(argv[i], "-x")){
+			readx = 1;
 		}
 		else if(!strcmp(argv[i], "-h")){
 			show_highlights = true;
 		}
 		else if(!strcmp(argv[i], "-o")){
-			output_details = true;
+			reado = 1;
 		}
 		else{
 			usage();
 			exit(0);
 		}
 	}
+
+	if(readx != 2){
+		usage();
+		exit(0);
+	}
 }
 
 int main(int argc, char** argv){
 	solve_params(argc, argv);
 	cout << "Starting analysis" << endl;
-	analyzer.Analyze(buffer);
+	analyzer.Analyze(src.c_str());
 	LexAnalyzeResult res;
 	analyzer.GetResult(res);
-	if(output_details){
+	if(output_file.is_open()){
+		for(auto& seg : res){
+			output_file << seg.left_index << " " << seg.right_index << " " << (int)(seg.component_type) << endl;
+		}
+		output_file.close();
+	}
+	else {
 		for(auto& seg : res){
 			cout << "[" << seg.left_index << " - " << seg.right_index << "] => " << to_string(seg.component_type) << endl;
 		}
 	}
 	if(show_highlights){
-		Highlighter h(buffer, res);
+		Highlighter h(src.c_str(), res);
 		h.Output();
 	}
-	if(buffer) delete buffer;
 	return 0;
 }

@@ -1,1 +1,4 @@
 add_library(syntax_analyzer syntax_analyzer.cpp)
+target_link_libraries(syntax_analyzer lex_analyzer)
+add_executable(ezsyntax ezsyntax.cpp)
+target_link_libraries(ezsyntax syntax_analyzer colors)
